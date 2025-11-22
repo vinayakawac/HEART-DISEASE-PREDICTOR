@@ -1,0 +1,258 @@
+# Heart Disease Prediction API
+
+> An intelligent API that helps predict heart disease risk using machine learning. Think of it as your AI-powered medical assistant that analyzes patient data and provides instant risk assessments.
+
+## What Does This Do?
+
+This is a REST API that predicts whether a patient is at risk of heart disease based on their medical data. Just send us patient information like age, blood pressure, cholesterol levels, and our Random Forest machine learning model will analyze it and give you back a risk assessment with probability scores.
+
+**Real-world use case**: Doctors and healthcare apps can integrate this API to get quick preliminary risk assessments, helping prioritize patients who may need further testing.
+
+## Why Use This?
+
+- **Fast & Accurate**: 85%+ accuracy with predictions in milliseconds
+- **Easy to Use**: Simple REST API with clear documentation
+- **Production Ready**: Already set up with logging, monitoring, and error handling
+- **Deploy Anywhere**: Works with Docker, Kubernetes, AWS, Google Cloud, Heroku, etc.
+- **Well Tested**: Comprehensive test suite ensures reliability
+- **Free & Open Source**: Use it, modify it, deploy it - it's yours!
+
+## What You'll Need
+
+Don't worry, it's straightforward! You just need:
+
+- **Python 3.9 or newer** (if running locally)
+- **Docker** (easiest way to run it - we recommend this!)
+- **5 minutes** of your time to get it running
+
+## ? Quick Start
+
+### Option 1: Docker Compose (Recommended)
+
+\`\`\`bash
+# Clone repository
+git clone https://github.com/vinayakawac/HEART-DISEASE-PREDICTOR.git
+cd HEART-DISEASE-PREDICTOR
+
+# Run with Docker Compose
+docker-compose up -d
+
+# Access API at http://localhost:8000/docs
+\`\`\`
+
+### Option 2: Local Development
+
+\`\`\`bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+\`\`\`
+
+### Option 3: Kubernetes
+
+\`\`\`bash
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/ingress.yaml
+\`\`\`
+
+##  API Usage
+
+### Predict Heart Disease Risk
+
+\`\`\`bash
+curl -X POST "http://localhost:8000/api/v1/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "age": 55,
+    "sex": 1,
+    "cp": 2,
+    "trestbps": 130,
+    "chol": 250,
+    "fbs": 1,
+    "restecg": 1,
+    "thalach": 150,
+    "exang": 0,
+    "oldpeak": 1.5,
+    "slope": 2,
+    "ca": 0,
+    "thal": 2
+  }'
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "prediction": 1,
+  "probability": 0.85,
+  "risk_level": "High",
+  "timestamp": "2025-11-22T12:00:00Z"
+}
+\`\`\`
+
+### Interactive Documentation
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+##  Testing
+
+\`\`\`bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=app --cov-report=html
+
+# View coverage report
+open htmlcov/index.html
+\`\`\`
+
+##  Model Information
+
+### Input Features (13 total)
+
+| What It Is | What It Means | Valid Values |
+|------------|---------------|--------------|
+| **age** | Patient's age in years | 20 to 100 |
+| **sex** | Gender of patient | 1 = Male, 0 = Female |
+| **cp** | Type of chest pain they feel | 0 to 3 (0=typical angina, 3=no symptoms) |
+| **trestbps** | Blood pressure at rest (mm Hg) | 90 to 200 |
+| **chol** | Cholesterol level (mg/dl) | 100 to 600 |
+| **fbs** | Is blood sugar over 120? | 1 = Yes, 0 = No |
+| **restecg** | Resting heart electrical activity | 0 to 2 (ECG results) |
+| **thalach** | Max heart rate during exercise | 60 to 220 |
+| **exang** | Does exercise cause chest pain? | 1 = Yes, 0 = No |
+| **oldpeak** | ST depression (heart stress indicator) | 0 to 6.2 |
+| **slope** | Heart rate pattern during peak exercise | 0 to 2 |
+| **ca** | Major blood vessels visible in scan | 0 to 3 |
+| **thal** | Thalassemia blood disorder status | 0 to 3 |
+
+### How Accurate Is It?
+
+Our Random Forest model has been trained and tested on real patient data:
+- **85% Accuracy** - Correctly predicts 85 out of 100 cases
+- **83% Precision** - When it says "risk", it's right 83% of the time
+- **87% Recall** - Catches 87% of actual heart disease cases
+
+**What this means**: It's pretty reliable! But remember, this is a tool to help healthcare professionals, not replace them.
+
+##  Configuration
+
+Create `.env` file from `.env.example`:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Key environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| ENVIRONMENT | Environment mode | production |
+| LOG_LEVEL | Logging level | INFO |
+| MODEL_PATH | Path to model | models/heart_disease_model_forest.joblib |
+| WORKERS | Number of workers | 4 |
+
+##  Monitoring
+
+### Prometheus Metrics
+Access at http://localhost:9090 (when monitoring profile enabled)
+
+\`\`\`bash
+docker-compose --profile monitoring up -d
+\`\`\`
+
+Available metrics:
+- `prediction_requests_total`: Total predictions
+- `prediction_duration_seconds`: Prediction latency
+- `http_requests_total`: HTTP request count
+
+### Grafana Dashboards
+Access at http://localhost:3000 (default: admin/admin)
+
+## ? Deployment
+
+### AWS ECS
+\`\`\`bash
+# Push to ECR
+aws ecr get-login-password | docker login --username AWS --password-stdin <account>.dkr.ecr.region.amazonaws.com
+docker tag heart-disease-predictor:latest <account>.dkr.ecr.region.amazonaws.com/heart-disease:latest
+docker push <account>.dkr.ecr.region.amazonaws.com/heart-disease:latest
+\`\`\`
+
+### Google Cloud Run
+\`\`\`bash
+gcloud builds submit --tag gcr.io/PROJECT-ID/heart-disease
+gcloud run deploy --image gcr.io/PROJECT-ID/heart-disease --platform managed
+\`\`\`
+
+### Heroku
+\`\`\`bash
+heroku container:push web -a your-app-name
+heroku container:release web -a your-app-name
+\`\`\`
+
+##  Security Features
+
+- Non-root Docker user
+- Input validation with Pydantic
+- Rate limiting
+- CORS configuration
+- Comprehensive error handling
+- Health check endpoints
+
+##  Project Structure
+
+\`\`\`
+.
++-- app/
+|   +-- main.py              # FastAPI application
+|   +-- api/
+|   |   +-- endpoints.py     # API routes
+|   +-- core/
+|   |   +-- config.py        # Configuration
+|   |   +-- logging.py       # Logging
+|   +-- models/
+|   |   +-- schemas.py       # Pydantic schemas
+|   +-- services/
+|       +-- prediction.py    # ML service
++-- models/                   # Trained models
++-- tests/                    # Test suite
++-- k8s/                      # Kubernetes manifests
++-- .github/workflows/        # CI/CD pipeline
++-- Dockerfile
++-- docker-compose.yml
++-- requirements.txt
+\`\`\`
+
+## ? Contributing
+
+1. Fork the repository
+2. Create feature branch (\`git checkout -b feature/amazing-feature\`)
+3. Commit changes (\`git commit -m 'Add amazing feature'\`)
+4. Push to branch (\`git push origin feature/amazing-feature\`)
+5. Open Pull Request
+
+## ? License
+
+MIT License - see [LICENSE](LICENSE) file
+
+## ? Author
+
+**Vinayak** - [@vinayakawac](https://github.com/vinayakawac)
+
+## ? Acknowledgments
+
+- UCI Heart Disease Dataset
+- FastAPI Framework
+- scikit-learn Library
+
+---
+
+ **Disclaimer**: This API is for educational purposes. Consult healthcare professionals for medical decisions.
